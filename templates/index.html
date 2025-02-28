@@ -1,0 +1,171 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Search Engine</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            text-align: center; 
+            margin: 40px;
+            background: linear-gradient(135deg, #5509c0, #0d62c8);
+            color: white;
+        }
+        h1 {
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        input { 
+            width: 60%; 
+            padding: 12px; 
+            margin: 10px; 
+            font-size: 18px; 
+            border-radius: 25px;
+            border: none;
+            outline: none;
+            transition: 0.3s;
+            text-align: center;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        input:focus {
+            border: 2px solid #c96bff;
+            box-shadow: 0px 4px 16px rgba(119, 94, 127, 0.6);
+        }
+        button { 
+            padding: 12px 20px; 
+            font-size: 18px; 
+            cursor: pointer;
+            background: linear-gradient(135deg, #ff6b81, #ff4757);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            transition: 0.3s;
+            font-weight: bold;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        button:hover {
+            background: linear-gradient(135deg, #ff4757, #e84118);
+            transform: scale(1.05);
+            box-shadow: 0px 4px 16px rgba(255, 71, 87, 0.8);
+        }
+        .results { 
+            margin-top: auto; 
+            text-align: left; 
+            max-width: auto; 
+            margin-left: auto; 
+            margin-right: auto; 
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.3);
+            display: none;
+        }
+        .result-item { 
+            margin-bottom: 15px; 
+            padding: 10px;
+            border-radius: 10px;
+            background: #1bc261;
+            transition: 0.3s;
+            box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.1);
+        }
+        .result-item:hover {
+            background: #ffeaa7;
+            transform: scale(1.03);
+            box-shadow: 0px 4px 12px rgba(255, 234, 167, 0.8);
+        }
+        .loading { 
+            font-style: italic; 
+            color: #ff4757;
+            font-weight: bold;
+            animation: blink 1s infinite alternate;
+        }
+        .no-results {
+            color: red; 
+            font-weight: bold;
+            text-align: center;
+            font-size: 18px;
+            padding: 10px;
+        }
+
+        .error-message {
+            color: #ffcc00; 
+            font-weight: bold;
+            text-align: center;
+            font-size: 18px;
+            padding: 10px;
+        }
+        @keyframes blink {
+            from { opacity: 1; }
+            to { opacity: 0.4; }
+        }
+        a {
+            text-decoration: none;
+            color: #ff4757;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        a:hover {
+            color: #e84118;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h1>Super Search Engine</h1>
+    <input type="text" id="query" placeholder="Enter your search query...">
+    <button onclick="search()">Search</button>
+    <div class="results" id="results"></div>
+
+    <script>
+
+        document.getElementById("query").addEventListener("keydown", function(event) {
+            if (event.key === "Enter") {
+                search();
+            }
+        });
+
+        function search() {
+            const query = document.getElementById("query").value;
+            const resultsDiv = document.getElementById("results");
+            if (!query) {
+                alert("Please enter a search query.");
+                return;
+            }
+            resultsDiv.style.display = "block";
+            resultsDiv.innerHTML = "<p class='loading'>🔍 Searching...</p>";
+
+            fetch("/search", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ query })
+            })
+            .then(response => response.json())
+            .then(data => {
+                
+                resultsDiv.innerHTML = "";
+
+                if (data.error) {
+                    resultsDiv.innerHTML = "<p>Error: " + data.error + "</p>";
+                    return;
+                }
+
+                if (data.length === 0) {
+                    resultsDiv.innerHTML = "<p class='no-results'>❌ No results found.</p>";
+                    return;
+                }
+
+                data.forEach((item, index) => {
+                    resultsDiv.innerHTML += `<div class="result-item">
+                        <strong>${index + 1}. <a href="${item.url}" target="_blank">🔗 ${item.url}</a></strong>
+                        <p>tf_idf Score: ${item.score}</p>
+                    </div>`;
+                });
+            })
+            .catch(error => {
+                resultsDiv.innerHTML = "<pclass='no-results'>❌ Error fetching results.</p>";
+                console.error("Error:", error);
+            });
+        }
+    </script>
+</body>
+</html>
